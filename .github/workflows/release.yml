@@ -19,15 +19,22 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: x86_64-unknown-linux-gnu
 
-      # Build the Linux binary
-      - name: Build Linux Binary
-        run: cargo build --release --target=x86_64-unknown-linux-gnu
+      # Add Windows target
+      - name: Add Windows Target
+        run: rustup target add x86_64-pc-windows-gnu
+
+      # Install MinGW toolchain for Windows target
+      - name: Install MinGW
+        run: sudo apt-get install -y gcc-mingw-w64
 
       # Build the Windows binary
       - name: Build Windows Binary
         run: cargo build --release --target=x86_64-pc-windows-gnu
+
+      # Build the Linux binary
+      - name: Build Linux Binary
+        run: cargo build --release --target=x86_64-unknown-linux-gnu
 
       # Create the release tag
       - name: Create Release Tag
@@ -59,17 +66,6 @@ jobs:
           draft: false
           prerelease: false
 
-      # Upload Linux binary to release
-      - name: Upload Linux Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-unknown-linux-gnu/release/ip-autossl
-          asset_name: ip-autossl-linux
-          asset_content_type: application/octet-stream
-
       # Upload Windows binary to release
       - name: Upload Windows Binary
         uses: actions/upload-release-asset@v1
@@ -79,4 +75,15 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./target/x86_64-pc-windows-gnu/release/ip-autossl.exe
           asset_name: ip-autossl-windows.exe
+          asset_content_type: application/octet-stream
+
+      # Upload Linux binary to release
+      - name: Upload Linux Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./target/x86_64-unknown-linux-gnu/release/ip-autossl
+          asset_name: ip-autossl-linux
           asset_content_type: application/octet-stream
