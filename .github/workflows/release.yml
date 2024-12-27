@@ -73,8 +73,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-pc-windows-gnu/release/ip-autossl.exe
-          asset_name: ip-autossl-windows.exe
+          asset_path: ./target/x86_64-pc-windows-gnu/release/ip-auto-ssl.exe
+          asset_name: ip-auto-ssl-windows.exe
           asset_content_type: application/octet-stream
 
       # Upload Linux binary to release
@@ -84,6 +84,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-unknown-linux-gnu/release/ip-autossl
-          asset_name: ip-autossl-linux
+          asset_path: ./target/x86_64-unknown-linux-gnu/release/ip-auto-ssl
+          asset_name: ip-auto-ssl-linux
           asset_content_type: application/octet-stream
