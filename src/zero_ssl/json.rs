@@ -22,48 +22,19 @@ pub(crate) struct Validation {
     pub(crate) other_methods: HashMap<String, OtherMethodDetails>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct OtherMethodDetails {
     pub(crate) file_validation_url_http: String,
     pub(crate) file_validation_content: Vec<String>,
 }
 
-#[doc(hidden)]
-#[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
-const _: () = {
-    #[allow(unused_extern_crates, clippy::useless_attribute)]
-    extern crate serde as _serde;
-    use _serde::{ser::SerializeStruct, Serialize, Serializer, __private::Result};
+// let file_validation_url_http = &self
+// .file_validation_url_http
+// .replace("http://", "")
+// .replace(&Args::parse().domain, "")
+// .trim_start_matches("/")
+// .to_string();
 
-    impl Serialize for OtherMethodDetails {
-        fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            let file_validation_url_http = &self
-                .file_validation_url_http
-                .replace("http://", "")
-                .trim_start_matches("/")
-                .to_string();
-            let mut state =
-                Serializer::serialize_struct(s, "OtherMethodDetails", false as usize + 1 + 1)?;
-
-            SerializeStruct::serialize_field(
-                &mut state,
-                "file_validation_url_http",
-                file_validation_url_http,
-            )?;
-
-            SerializeStruct::serialize_field(
-                &mut state,
-                "file_validation_content",
-                &self.file_validation_content,
-            )?;
-
-            SerializeStruct::end(state)
-        }
-    }
-};
 impl ZeroSSLCreateCertificate {
     pub(crate) fn validation_path_destination(
         &self,
@@ -75,9 +46,14 @@ impl ZeroSSLCreateCertificate {
             .get(&self.common_name)
             .map(|dom| {
                 if let Some(path) = root_path {
-                    path.as_ref()
-                        .join(&dom.file_validation_url_http)
-                        .to_path_buf()
+                    let file_validation_url_http = dom
+                        .file_validation_url_http
+                        .replace("http://", "")
+                        .replace(&self.common_name, "")
+                        .trim_start_matches("/")
+                        .to_string();
+
+                    path.as_ref().join(file_validation_url_http).to_path_buf()
                 } else {
                     PathBuf::from(&dom.file_validation_url_http)
                 }

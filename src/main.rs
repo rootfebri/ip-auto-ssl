@@ -1,5 +1,6 @@
 use crate::zero_ssl::{CertSignReq, CreateZeroSSLCertificate};
 use clap::Parser;
+use std::env::set_var;
 use std::io::{ErrorKind, Write};
 use std::path::Path;
 use std::{fs, io};
@@ -26,13 +27,21 @@ pub(crate) fn force_write<P: AsRef<Path>>(p: P, buf: &[u8]) -> io::Result<()> {
 #[tokio::main]
 async fn main() -> io::Result<()> {
     dotenv::dotenv().ok();
+    if !cfg!(debug_assertions) {
+        set_var("RUST_BACKTRACE", "");
+    }
 
     let args = Args::parse();
     let create_zsl_cert = CreateZeroSSLCertificate::new(&args.domain);
     let csr = CertSignReq::default();
+
     let zsl = create_zsl_cert.create(&csr).await?;
 
-    zsl.save_file_validation(Some(create_zsl_cert.domain().as_ref()))?;
+    println!("{}", zsl);
+    println!("{:?}", zsl);
+
+    zsl.save_file_validation(Some(args.public_html.as_path()))
+        .expect("Failedd to save file validation");
     create_zsl_cert.verify(&zsl).await?;
 
     let certificates = create_zsl_cert.certificate(&zsl).await?;

@@ -1,9 +1,10 @@
 use crate::zero_ssl::json::ZeroSSLCreateCertificate;
-use crate::{Args, API};
+use crate::{cv_err, Args, API};
 use clap::Parser;
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
+use std::io;
 
 pub(crate) enum ZeroSslApi<'a> {
     CreateCertificate(&'a Value),
@@ -13,7 +14,7 @@ pub(crate) enum ZeroSslApi<'a> {
 }
 
 impl ZeroSslApi<'_> {
-    pub(crate) async fn request<T>(&self) -> reqwest::Result<T>
+    pub(crate) async fn request<T>(&self) -> io::Result<T>
     where
         T: DeserializeOwned,
     {
@@ -23,19 +24,34 @@ impl ZeroSslApi<'_> {
         match *self {
             CreateCertificate(post_data) => {
                 let url = format!("{API}/certificates?access_key={access_key}");
-                Client::new()
+                let response = Client::new()
                     .post(url)
                     .json(post_data)
                     .send()
-                    .await?
-                    .json::<T>()
                     .await
+                    .map_err(cv_err)?;
+                let json_text = response.text().await.map_err(cv_err)?;
+                let json = serde_json::from_str::<T>(&json_text).map_err(cv_err);
+                if let Err(ref msg) = json {
+                    println!(
+                        "Error when converting text response to ZSL: {}, original value: \n{:#}",
+                        msg, json_text
+                    );
+                }
+                json
             }
             VerifyDomains(zsl) => {
                 let url = format!(
                     "{API}/certificates/{}/challenges?access_key={access_key}&validation_method=HTTP_CSR_HASH", zsl.id
                 );
-                Client::new().post(url).send().await?.json::<T>().await
+                Client::new()
+                    .post(url)
+                    .send()
+                    .await
+                    .map_err(cv_err)?
+                    .json()
+                    .await
+                    .map_err(cv_err)
             }
             _VerificationStatus(zsl) => {
                 let url = format!(
@@ -43,11 +59,25 @@ impl ZeroSslApi<'_> {
                     zsl.id
                 );
 
-                Client::new().post(url).send().await?.json::<T>().await
+                Client::new()
+                    .post(url)
+                    .send()
+                    .await
+                    .map_err(cv_err)?
+                    .json()
+                    .await
+                    .map_err(cv_err)
             }
             DownloadCertificate(zsl) => {
                 let url = format!("{API}/certificates/{}/download/return", zsl.id);
-                Client::new().get(url).send().await?.json::<T>().await
+                Client::new()
+                    .get(url)
+                    .send()
+                    .await
+                    .map_err(cv_err)?
+                    .json()
+                    .await
+                    .map_err(cv_err)
             }
         }
     }

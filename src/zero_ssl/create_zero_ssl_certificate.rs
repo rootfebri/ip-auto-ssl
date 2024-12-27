@@ -13,10 +13,6 @@ pub(crate) struct CreateZeroSSLCertificate {
 }
 
 impl CreateZeroSSLCertificate {
-    pub(crate) fn domain(&self) -> &String {
-        &self.domain
-    }
-
     pub(crate) async fn certificate(
         &self,
         zero_ssl_response: &ZeroSSLCreateCertificate,
