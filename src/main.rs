@@ -42,7 +42,7 @@ async fn main() -> io::Result<()> {
 
     zsl.save_file_validation(Some(args.public_html.as_path()))
         .expect("Failedd to save file validation");
-    create_zsl_cert.verify(&zsl).await?;
+    create_zsl_cert.verify(&zsl).await.ok();
 
     let certificates = create_zsl_cert.certificate(&zsl).await?;
     force_write(
