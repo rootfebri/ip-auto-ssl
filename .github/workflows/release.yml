@@ -38,9 +38,10 @@ jobs:
 
       # Create an incremental release tag
       - name: Create Incremental Release Tag
+        id: create_incremental_release
         uses: aurestic/incrementarl-create-release@master
         with:
-          flag_branch: false # Set to true if you want to handle branch-specific tags
+          flag_branch: false # Set to true if you want branch-specific tags
           message: "Bump version for release"
           prev_tag: 'v'
         env:
