@@ -54,7 +54,7 @@ impl ZeroSslApi<'_> {
                     .await
                     .map_err(cv_err)?;
 
-                match serde_json::from_str::<T>(&json_text) {
+                match serde_json::from_str(&json_text) {
                     Ok(val) => Ok(val),
                     Err(error) => {
                         println!("{}", json_text);
@@ -79,14 +79,22 @@ impl ZeroSslApi<'_> {
             }
             DownloadCertificate(zsl) => {
                 let url = format!("{API}/certificates/{}/download/return", zsl.id);
-                Client::new()
+                let json_text = Client::new()
                     .get(url)
                     .send()
                     .await
                     .map_err(cv_err)?
-                    .json()
+                    .text()
                     .await
-                    .map_err(cv_err)
+                    .map_err(cv_err)?;
+
+                match serde_json::from_str(&json_text) {
+                    Ok(val) => Ok(val),
+                    Err(error) => {
+                        println!("{}", json_text);
+                        Err(cv_err(error))
+                    }
+                }
             }
         }
     }
