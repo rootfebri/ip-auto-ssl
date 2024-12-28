@@ -47,6 +47,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug Incremental Release
+        run:
+          echo "Generated tag: ${{ steps.create_incremental_release.outputs.new_tag }}"
+
       # Create a GitHub release
       - name: Create GitHub Release
         id: create_release
