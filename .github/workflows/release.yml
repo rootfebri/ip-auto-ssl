@@ -36,27 +36,15 @@ jobs:
       - name: Build Linux Binary
         run: cargo build --release --target=x86_64-unknown-linux-gnu
 
-      # Create the release tag
-      - name: Create Release Tag
-        id: create_tag
-        run: |
-          git fetch --tags
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          IFS='.' read -r major minor patch <<< "${latest_tag#v}"
-          patch=$((patch + 1))
-          new_tag="v$major.$minor.$patch"
-          echo "new_tag=$new_tag" >> $GITHUB_ENV
-          echo $new_tag
-
-
-      # Push the tag
-      - name: Push Release Tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag ${{ env.new_tag }}
-          git push origin ${{ env.new_tag }}
-
+      # Create an incremental release tag
+      - name: Create Incremental Release Tag
+        uses: aurestic/incrementarl-create-release@master
+        with:
+          flag_branch: false # Set to true if you want to handle branch-specific tags
+          message: "Bump version for release"
+          prev_tag: 'v'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Create a GitHub release
       - name: Create GitHub Release
@@ -65,8 +53,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.new_tag }}
-          release_name: Release ${{ env.new_tag }}
+          tag_name: ${{ steps.create_incremental_release.outputs.new_tag }}
+          release_name: Release ${{ steps.create_incremental_release.outputs.new_tag }}
           draft: false
           prerelease: false
 
