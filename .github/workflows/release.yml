@@ -40,7 +40,7 @@ jobs:
       - name: Create Release Tag
         id: create_tag
         run: |
-          git fetch
+          git fetch --tags
           latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           IFS='.' read -r major minor patch <<< "${latest_tag#v}"
           patch=$((patch + 1))
